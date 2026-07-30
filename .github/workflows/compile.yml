@@ -25,6 +25,7 @@ jobs:
           
           # Tell it where to find the Adafruit board package
           platforms: |
+            - name: arduino:avr
             - name: adafruit:avr
               source-url: https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
           
