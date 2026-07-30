@@ -1,0 +1,37 @@
+name: Compile Sketch
+
+# This tells GitHub to run the script every time you push to the 'main' branch
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Grab your code from the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the environment and compile
+      - name: Compile Arduino sketch
+        uses: arduino/compile-sketches@v1
+        with:
+          # Tell it which board to build for
+          fqbn: "adafruit:avr:metro"
+          
+          # Tell it where to find the Adafruit board package
+          platforms: |
+            - name: adafruit:avr
+              source-url: https://adafruit.github.io/arduino-board-index/package_adafruit_index.json
+          
+          # Tell it which libraries to install before compiling
+          libraries: |
+            - name: IRremote
+            
+          # Look for the .ino file in the root of the repository
+          sketch-paths: |
+            .
