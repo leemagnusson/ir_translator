@@ -49,6 +49,10 @@ void loop() {
         
         // We only care about NEC protocol for Yamaha
         if (IrReceiver.decodedIRData.protocol == NEC) {
+            Serial.print(F("Received address 0x"));
+            Serial.print(IrReceiver.decodedIRData.address, HEX);
+            Serial.print(F(", cmd 0x"));
+            Serial.println(IrReceiver.decodedIRData.command, HEX);
             
             // 2. Handle the "Repeat" code (Button is being held down)
             if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
