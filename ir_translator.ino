@@ -19,11 +19,13 @@ constexpr uint16_t AVR_ADDRESS    = 0x7A7A;
 constexpr uint8_t SNDBAR_CMD_POWER    = 0x10;
 constexpr uint8_t SNDBAR_CMD_VOL_UP   = 0x11;
 constexpr uint8_t SNDBAR_CMD_VOL_DOWN = 0x12;
+constexpr uint8_t SNDBAR_CMD_MUTE     = 0x13; // Added: Soundbar Mute
 
 // --- AV Receiver Commands (Outgoing) ---
 constexpr uint8_t AVR_CMD_POWER       = 0x20;
 constexpr uint8_t AVR_CMD_VOL_UP      = 0x21;
 constexpr uint8_t AVR_CMD_VOL_DOWN    = 0x22;
+constexpr uint8_t AVR_CMD_MUTE        = 0x23; // Added: AVR Mute
 
 // State tracking for the repeat mechanism
 uint8_t last_avr_command = 0x00;
@@ -67,6 +69,7 @@ void loop() {
                     case SNDBAR_CMD_POWER:    outgoing_cmd = AVR_CMD_POWER; break;
                     case SNDBAR_CMD_VOL_UP:   outgoing_cmd = AVR_CMD_VOL_UP; break;
                     case SNDBAR_CMD_VOL_DOWN: outgoing_cmd = AVR_CMD_VOL_DOWN; break;
+                    case SNDBAR_CMD_MUTE:     outgoing_cmd = AVR_CMD_MUTE; break;     // Added: Mute mapping
                     default: break;
                 }
 
