@@ -57,9 +57,9 @@ void loop() {
             // 2. Handle the "Repeat" code (Button is being held down)
             if (IrReceiver.decodedIRData.flags & IRDATA_FLAGS_IS_REPEAT) {
                 if (last_avr_command != 0x00) {
-                    Serial.println(F("Sending AVR Repeat"));
+                  //  Serial.println(F("Sending AVR Repeat"));
                     // Send a generic NEC repeat pulse
-                    IrSender.sendNECRepeat();
+                  //  IrSender.sendNECRepeat();
                 }
             } 
             // 3. Handle a new button press
@@ -82,6 +82,8 @@ void loop() {
                     Serial.print(incoming_cmd, HEX);
                     Serial.print(F(" -> 0x"));
                     Serial.println(outgoing_cmd, HEX);
+
+                    delay(55); // wait until after potential first repeat
                     
                     // Transmit the mapped AVR code (0 repeats, we handle repeats manually)
                     IrSender.sendNEC(AVR_ADDRESS, outgoing_cmd, 0);
