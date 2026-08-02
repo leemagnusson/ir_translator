@@ -12,40 +12,82 @@ constexpr uint8_t IR_RECEIVE_PIN = 2; // Connect TSOP data here
 constexpr uint8_t IR_SEND_PIN    = 3; // Must be Pin 3 on ATmega328P (Timer2 PWM)
 
 // --- Known Addresses (Placeholders - you will need to dump yours) ---
-constexpr uint16_t SNDBAR_ADDRESS = 0x5E5E; 
-constexpr uint16_t AVR_ADDRESS    = 0x7A7A;
+constexpr uint16_t SNDBAR_ADDRESS = 0x78; 
+constexpr uint16_t AVR_ADDRESS    = 0x7A;
 
 // --- Soundbar Commands (Incoming) ---
 constexpr uint8_t SNDBAR_CMD_POWER    = 0x10;
-constexpr uint8_t SNDBAR_CMD_VOL_UP   = 0x11;
-constexpr uint8_t SNDBAR_CMD_VOL_DOWN = 0x12;
-constexpr uint8_t SNDBAR_CMD_MUTE     = 0x13; // Added: Soundbar Mute
+constexpr uint8_t SNDBAR_CMD_VOL_UP   = 0x1E;
+constexpr uint8_t SNDBAR_CMD_VOL_DOWN = 0x1F;
+constexpr uint8_t SNDBAR_CMD_MUTE     = 0x9C; // Added: Soundbar Mute
 
 // --- AV Receiver Commands (Outgoing) ---
 constexpr uint8_t AVR_CMD_POWER       = 0x20;
-constexpr uint8_t AVR_CMD_VOL_UP      = 0x21;
-constexpr uint8_t AVR_CMD_VOL_DOWN    = 0x22;
+constexpr uint8_t AVR_CMD_VOL_UP      = 0x1A;
+constexpr uint8_t AVR_CMD_VOL_DOWN    = 0x1B;
 constexpr uint8_t AVR_CMD_MUTE        = 0x23; // Added: AVR Mute
 
 // State tracking for the repeat mechanism
 uint8_t last_avr_command = 0x00;
 
+unsigned long previousMillis = 0;
+const long blinkInterval = 500; // 500ms ON, 500ms OFF = 1 blink per second
+bool ledIsOn = false;
+uint8_t colorState = 0; // 0=Red, 1=Green, 2=Blue
+
 void setup() {
     Serial.begin(115200);
-    while (!Serial);
+    //while (!Serial);
+    uint32_t t = millis();
+    while (!Serial && (millis() - t < 3000)); 
+
+    // Setup RGB Pins
+    pinMode(LEDR, OUTPUT);
+    pinMode(LEDG, OUTPUT);
+    pinMode(LEDB, OUTPUT);
 
     // Start the receiver
     IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
     
     // Start the sender on Pin 3
     IrSender.begin(IR_SEND_PIN);
+
+    pinMode(D4, OUTPUT);
+    
+    unsigned long previousMillis = 0;
+    const long blinkInterval = 500; // 500ms ON, 500ms OFF = 1 blink per second
+    bool ledIsOn = false;
+    uint8_t colorState = 0; // 0=Red, 1=Green, 2=Blue
     
     Serial.println(F("Yamaha IR Translator Ready."));
 }
 
 void loop() {
-    // 1. Check if we have received a complete IR frame
+
+
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= blinkInterval) {
+        previousMillis = currentMillis;
+        ledIsOn = !ledIsOn; // Toggle state
+
+        if (ledIsOn) {
+            // Turn on the current color, turn off the others
+            digitalWrite(LEDR,   colorState == 0 ? LOW : HIGH);
+            digitalWrite(LEDG, colorState == 1 ?   LOW : HIGH);
+            digitalWrite(LEDB,  colorState == 2 ?  LOW : HIGH);
+            
+            // Move to the next color for the next blink
+            colorState = (colorState + 1) % 3; 
+        } else {
+            // Turn all off during the OFF phase of the blink
+            digitalWrite(LEDR,  HIGH);
+            digitalWrite(LEDG,  HIGH);
+            digitalWrite(LEDB,  HIGH);
+        }
+    }
+
     if (IrReceiver.decode()) {
+        Serial.println("Received something");
         
         // We only care about NEC protocol for Yamaha
         if (IrReceiver.decodedIRData.protocol == NEC) {
@@ -99,6 +141,6 @@ void loop() {
         
         // 4. Critical Step: Transmitting disables the receiver to prevent a feedback loop.
         // We must re-enable it immediately to catch the next pulse in the ~40ms gap.
-        IrReceiver.start(); // Resets state and resumes listening
+        IrReceiver.resume(); // Resets state and resumes listening
     }
 }
